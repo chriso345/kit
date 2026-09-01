@@ -1,0 +1,7 @@
+{
+	"id": "js-tool",
+	"name": "JS Tool Example",
+	"description": "A simple JavaScript tool example.",
+	"version": "0.0.1",
+	"build": {}
+}
