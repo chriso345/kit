@@ -254,3 +254,7 @@ dkms.conf
 
 *.wasm
 vendor/
+
+# Zig Dependencies
+.zig-cache/
+zig-out/

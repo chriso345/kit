@@ -1,5 +1,11 @@
 export const TOOLS = [
   {
+  "id": "base64",
+  "name": "Base64 Encode/Decode",
+  "description": "Encode or decode Base64 locally.",
+  "version": "0.0.1"
+},
+  {
   "id": "js-tool",
   "name": "JS Tool Example",
   "description": "A simple JavaScript tool example.",
