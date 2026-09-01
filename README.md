@@ -6,14 +6,14 @@
 
 ## Installation
 
-Requires only a modern browser and optionally Python (for the local dev server). Some tools have their own build-time dependencies (e.g. `clang` for WASM tools, `npm` for tools that vendor JS packages).
+**kit** requires a modern browser that support WASM modules, and Zig 0.16.0 for building the tools and generating the registry. Note that some tools have additional build-time dependencies that are not explicitly mentioned.
 
 ```bash
 git clone https://github.com/chriso345/kit.git
 cd kit
 
-./scripts/build-registry.sh   # discovers tools, runs builds, generates the registry
-./scripts/run.sh --open       # serves the site locally
+zig build         # discovers tools, runs builds, generates the registry
+zig build serve   # serves the site locally
 ```
 
 ---
