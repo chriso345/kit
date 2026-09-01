@@ -6,6 +6,7 @@ export function mount(container) {
       <pre id="output"></pre>
     </div>
   `;
+
 	const btn = container.querySelector("#hello-btn");
 	const output = container.querySelector("#output");
 	btn.addEventListener("click", () => {

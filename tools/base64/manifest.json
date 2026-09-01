@@ -1,0 +1,10 @@
+{
+	"id": "base64",
+	"name": "Base64 Encode/Decode",
+	"description": "Encode or decode Base64 locally.",
+	"version": "0.0.1",
+	"build": {
+		"command": "./build.sh",
+		"artifact": "base64.wasm"
+	}
+}
