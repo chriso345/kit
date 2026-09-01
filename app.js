@@ -1,23 +1,43 @@
 import { TOOLS } from "./tools/registry.js";
 
+const THEME_KEY = "kit-theme";
+const themeToggle = document.getElementById("theme-toggle");
+
+function applyTheme(theme) {
+	document.documentElement.dataset.theme = theme;
+	themeToggle.textContent = theme === "dark" ? "light" : "dark";
+}
+
+function currentTheme() {
+	return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+applyTheme(currentTheme());
+
+themeToggle.addEventListener("click", () => {
+	const next = currentTheme() === "dark" ? "light" : "dark";
+	localStorage.setItem(THEME_KEY, next);
+	applyTheme(next);
+});
+
 const app = document.getElementById("app");
 const search = document.getElementById("tool-search");
 
 let activeTool = null;
 
 function renderHome(filter = "") {
-  const q = filter.trim().toLowerCase();
-  const visible = TOOLS.filter(
-    (t) =>
-      t.name.toLowerCase().includes(q) ||
-      t.description.toLowerCase().includes(q),
-  );
+	const q = filter.trim().toLowerCase();
+	const visible = TOOLS.filter(
+		(t) =>
+			t.name.toLowerCase().includes(q) ||
+			t.description.toLowerCase().includes(q),
+	);
 
-  app.innerHTML = `
+	app.innerHTML = `
     <ul class="tool-list">
       ${visible
-      .map(
-        (t) => `
+				.map(
+					(t) => `
           <li class="tool-item">
             <a href="#/${t.id}">
               <h3>${t.name}</h3>
@@ -26,21 +46,21 @@ function renderHome(filter = "") {
             </a>
           </li>
         `,
-      )
-      .join("")}
+				)
+				.join("")}
     </ul>
   `;
 }
 
 async function renderTool(toolId) {
-  const tool = TOOLS.find((t) => t.id === toolId);
+	const tool = TOOLS.find((t) => t.id === toolId);
 
-  if (!tool) {
-    app.innerHTML = `<p>Tool not found: ${toolId}</p>`;
-    return;
-  }
+	if (!tool) {
+		app.innerHTML = `<p>Tool not found: ${toolId}</p>`;
+		return;
+	}
 
-  app.innerHTML = `
+	app.innerHTML = `
     <div class="tool-view-header">
       <h2>${tool.name}</h2>
       <a href="#/" class="back-button">Back</a>
@@ -48,46 +68,46 @@ async function renderTool(toolId) {
     <div class="tool-panel" id="tool-mount">Loading...</div>
   `;
 
-  const mountPoint = document.getElementById("tool-mount");
+	const mountPoint = document.getElementById("tool-mount");
 
-  try {
-    const mod = await import(`./tools/${tool.id}/tool.js`);
-    activeTool = { id: toolId, unmount: mod.unmount };
-    mountPoint.innerHTML = "";
-    await mod.mount(mountPoint);
-  } catch (err) {
-    console.error("Error mounting tool:", err);
-    mountPoint.innerHTML = `<p>Error loading tool: ${err.message}</p>`;
-  }
+	try {
+		const mod = await import(`./tools/${tool.id}/tool.js`);
+		activeTool = { id: toolId, unmount: mod.unmount };
+		mountPoint.innerHTML = "";
+		await mod.mount(mountPoint);
+	} catch (err) {
+		console.error("Error mounting tool:", err);
+		mountPoint.innerHTML = `<p>Error loading tool: ${err.message}</p>`;
+	}
 }
 
 function parseRoute() {
-  const hash = location.hash.replace(/^#\/?/, "");
-  return hash || null;
+	const hash = location.hash.replace(/^#\/?/, "");
+	return hash || null;
 }
 
 async function route() {
-  if (activeTool?.unmount) {
-    try {
-      await activeTool.unmount();
-    } catch (err) {
-      console.error("Error unmounting tool:", err);
-    }
-  }
-  activeTool = null;
+	if (activeTool?.unmount) {
+		try {
+			await activeTool.unmount();
+		} catch (err) {
+			console.error("Error unmounting tool:", err);
+		}
+	}
+	activeTool = null;
 
-  const id = parseRoute();
+	const id = parseRoute();
 
-  if (id) {
-    await renderTool(id);
-  } else {
-    renderHome(search.value);
-  }
-  app.focus();
+	if (id) {
+		await renderTool(id);
+	} else {
+		renderHome(search.value);
+	}
+	app.focus();
 }
 
 search.addEventListener("input", () => {
-  if (!parseRoute()) renderHome(search.value);
+	if (!parseRoute()) renderHome(search.value);
 });
 
 window.addEventListener("hashchange", route);

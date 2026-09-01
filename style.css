@@ -1,0 +1,55 @@
+:root {
+	--bg: #ffffff;
+	--fg: #111111;
+	--border: #dddddd;
+	--accent: #f0f0f0;
+}
+
+:root[data-theme="dark"] {
+	--bg: #121212;
+	--fg: #e4e4e4;
+	--border: #333333;
+	--accent: #1e1e1e;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font-family: system-ui, sans-serif;
+}
+
+.site-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--border);
+}
+
+.site-header input,
+.site-header button {
+	background: var(--accent);
+	color: var(--fg);
+	border: 1px solid var(--border);
+}
+
+.site-footer {
+	display: flex;
+	gap: 1rem;
+	padding: 0.75rem 1rem;
+	border-top: 1px solid var(--border);
+	font-size: 0.85rem;
+}
+
+a {
+	color: inherit;
+}
+
+#json-box {
+	caret-color: var(--fg);
+}

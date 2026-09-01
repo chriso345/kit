@@ -1,6 +1,6 @@
 export async function mount(container) {
 	container.innerHTML = `
-    <div class="tool" style="display:flex; flex-direction:column; height:100vh;">
+    <div class="tool" style="display:flex; flex-direction:column; height:80vh;">
       <div style="display:flex; align-items:center; gap:1rem; padding:0.75rem 1rem; border-bottom:1px solid; flex-wrap:wrap;">
         <label>Indent:
           <select id="indent-select">
@@ -32,7 +32,7 @@ export async function mount(container) {
             white-space:pre-wrap; word-wrap:break-word;
             position:absolute; inset:0; width:100%; height:100%;
             border:none; outline:none; resize:none;
-            background:transparent; color:transparent; caret-color:black;
+            background:transparent; color:transparent; 
           "
         ></textarea>
       </div>
