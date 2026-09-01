@@ -4,7 +4,6 @@
 	"description": "Convert an MP4 video to an animated GIF locally in your browser using ffmpeg (WebAssembly).",
 	"version": "0.0.1",
 	"build": {
-		"command": "./build.sh",
 		"artifact": "vendor/core/ffmpeg-core.wasm"
 	}
 }
