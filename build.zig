@@ -33,8 +33,19 @@ pub fn build(b: *std.Build) !void {
         "Generate registry.js",
     );
 
+    const clean_step = b.step("clean", "Remove build artifacts");
+
+    const clean_registry = b.addSystemCommand(&.{ "rm", "-f", "tools/registry.js" });
+    clean_registry.setName("clean registry.js");
+    clean_step.dependOn(&clean_registry.step);
+
+    const clean_cache = b.addSystemCommand(&.{ "rm", "-rf", ".zig-cache" });
+    clean_cache.setName("clean zig-cache");
+    clean_step.dependOn(&clean_cache.step);
+
     inline for (tools.tools) |tool| {
         tool.add(b, tools_step);
+        tool.clean(b, clean_step);
     }
 
     var tools_dir = try cwd.openDir(io, "tools", .{

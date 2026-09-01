@@ -40,3 +40,13 @@ pub fn add(
     command.setName("vendor mp4-gif");
     parent.dependOn(&command.step);
 }
+
+pub fn clean(b: *std.Build, parent: *std.Build.Step) void {
+    const rm_vendor = b.addSystemCommand(&.{ "rm", "-rf", "tools/mp4-gif/vendor" });
+    rm_vendor.setName("clean mp4-gif vendor");
+    parent.dependOn(&rm_vendor.step);
+
+    const rm_cache = b.addSystemCommand(&.{ "rm", "-rf", "tools/mp4-gif/.zig-cache" });
+    rm_cache.setName("clean mp4-gif cache");
+    parent.dependOn(&rm_cache.step);
+}

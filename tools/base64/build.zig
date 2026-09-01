@@ -40,3 +40,13 @@ pub fn add(
     copy.step.dependOn(&exe.step);
     parent.dependOn(&copy.step);
 }
+
+pub fn clean(b: *std.Build, parent: *std.Build.Step) void {
+    const rm_wasm = b.addSystemCommand(&.{ "rm", "-f", "tools/base64/base64.wasm" });
+    rm_wasm.setName("clean base64");
+    parent.dependOn(&rm_wasm.step);
+
+    const rm_cache = b.addSystemCommand(&.{ "rm", "-rf", "tools/base64/.zig-cache" });
+    rm_cache.setName("clean base64 cache");
+    parent.dependOn(&rm_cache.step);
+}
