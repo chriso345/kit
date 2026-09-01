@@ -1,9 +1,7 @@
 export async function mount(container) {
 	container.innerHTML = `
-    <div class="tool">
-      <p>Paste JSON below to validate and pretty-print it.</p>
-      <textarea id="json-box" rows="12" placeholder='{"hello": "world"}'></textarea>
-      <div class="controls">
+    <div class="tool" style="display:flex; flex-direction:column; height:80vh;">
+      <div style="display:flex; align-items:center; gap:1rem; padding:0.75rem 1rem; border-bottom:1px solid; flex-wrap:wrap;">
         <label>Indent:
           <select id="indent-select">
             <option value="2">2 spaces</option>
@@ -14,12 +12,35 @@ export async function mount(container) {
         <button id="format-btn">Format</button>
         <button id="minify-btn">Minify</button>
         <button id="copy-btn" disabled>Copy</button>
+        <span id="status" style="margin-left:auto; font-size:0.9rem;"></span>
       </div>
-      <p id="status"></p>
+
+      <div style="position:relative; flex:1; overflow:auto;">
+        <pre id="json-highlight" aria-hidden="true" style="
+          margin:0; padding:1rem; box-sizing:border-box;
+          font-family:monospace; font-size:0.95rem; line-height:1.4;
+          white-space:pre-wrap; word-wrap:break-word;
+          position:absolute; inset:0; pointer-events:none;
+        "></pre>
+        <textarea
+          id="json-box"
+          placeholder='{"hello": "world"}'
+          spellcheck="false"
+          style="
+            margin:0; padding:1rem; box-sizing:border-box;
+            font-family:monospace; font-size:0.95rem; line-height:1.4;
+            white-space:pre-wrap; word-wrap:break-word;
+            position:absolute; inset:0; width:100%; height:100%;
+            border:none; outline:none; resize:none;
+            background:transparent; color:transparent; 
+          "
+        ></textarea>
+      </div>
     </div>
   `;
 
 	const box = container.querySelector("#json-box");
+	const highlightLayer = container.querySelector("#json-highlight");
 	const indentSelect = container.querySelector("#indent-select");
 	const formatBtn = container.querySelector("#format-btn");
 	const minifyBtn = container.querySelector("#minify-btn");
@@ -41,6 +62,37 @@ export async function mount(container) {
 		return `${err.message} (line ${line}, column ${col})`;
 	}
 
+	function escapeHtml(s) {
+		return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	}
+
+	function highlight(text) {
+		const escaped = escapeHtml(text);
+		return escaped.replace(
+			/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(\.\d+)?([eE][+-]?\d+)?)/g,
+			(match) => {
+				let color = "#f0b429"; // number
+				if (/^"/.test(match)) {
+					color = /:$/.test(match) ? "#42a5f5" : "#26a69a"; // key / string
+				} else if (/true|false/.test(match)) {
+					color = "#8e7cff"; // boolean
+				} else if (/null/.test(match)) {
+					color = "#ff5252"; // null
+				}
+				return `<span style="color:${color}">${match}</span>`;
+			},
+		);
+	}
+
+	function renderHighlight() {
+		highlightLayer.innerHTML = `${highlight(box.value)}\n`;
+	}
+
+	function syncScroll() {
+		highlightLayer.scrollTop = box.scrollTop;
+		highlightLayer.scrollLeft = box.scrollLeft;
+	}
+
 	function run(mode) {
 		const text = box.value;
 		if (!text.trim()) {
@@ -56,18 +108,22 @@ export async function mount(container) {
 			copyBtn.disabled = false;
 			status.textContent = "Valid JSON.";
 		} catch (err) {
-			box.value = "";
 			copyBtn.disabled = true;
 			status.textContent = `Invalid JSON: ${locateError(text, err)}`;
 		}
+		renderHighlight();
 	}
 
+	box.addEventListener("input", renderHighlight);
+	box.addEventListener("scroll", syncScroll);
 	formatBtn.addEventListener("click", () => run("format"));
 	minifyBtn.addEventListener("click", () => run("minify"));
 	copyBtn.addEventListener("click", async () => {
 		await navigator.clipboard.writeText(box.value);
 		status.textContent = "Copied to clipboard.";
 	});
+
+	renderHighlight();
 }
 
 export async function unmount() {}

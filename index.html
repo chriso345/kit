@@ -6,6 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>kit</title>
   <meta name="description" content="a collection of small tools">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (() => {
+      const stored = localStorage.getItem("kit-theme");
+      const theme = stored ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 </head>
 
 <body>
@@ -17,6 +25,7 @@
     <nav class="site-nav" aria-label="tool-search">
       <input type="search" id="tool-search" placeholder="Search tools..." aria-label="Search tools" />
     </nav>
+    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">dark</button>
   </header>
 
   <main id="app" tabindex="-1"></main>
