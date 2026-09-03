@@ -7,6 +7,18 @@ pub fn add(
     b: *std.Build,
     parent: *std.Build.Step,
 ) void {
+    const io = b.graph.io;
+    const vendor_path = "tools/mp4-gif/vendor";
+
+    if (std.Io.Dir.cwd().access(io, vendor_path, .{})) {
+        return;
+    } else |err| {
+        if (err != error.FileNotFound) {
+            std.debug.print("Error checking vendor folder existence: {}\n", .{err});
+            return;
+        }
+    }
+
     const command = b.addSystemCommand(&.{
         "bash",
         "-c",
