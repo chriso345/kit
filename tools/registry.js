@@ -5,25 +5,30 @@ export const TOOLS = [
     id: "mp4-gif",
     name: "MP4 to GIF",
     description: "Convert an MP4 video to an animated GIF.",
-    version: "0.0.1"
+    version: "1"
   },  {
     id: "wasm-tool",
     name: "WASM Tool Example",
     description: "A simple WebAssembly tool example.",
-    version: "0.0.1"
+    version: "1"
   },  {
     id: "json-formatter",
     name: "JSON Formatter",
     description: "Validate, pretty-print, and minify JSON.",
-    version: "0.0.1"
+    version: "1"
+  },  {
+    id: "regex-tester",
+    name: "Regex Tester",
+    description: "Test and debug regular expressions with real-time highlighting.",
+    version: "1"
   },  {
     id: "js-tool",
     name: "JS Tool Example",
     description: "A simple JavaScript tool example.",
-    version: "0.0.1"
+    version: "1"
   },  {
     id: "base64",
     name: "Base64 Encode / Decode",
     description: "Encode or decode Base64 text and images.",
-    version: "0.0.1"
+    version: "1"
   },];
