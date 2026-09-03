@@ -4,7 +4,7 @@ export const TOOLS = [
   {
     id: "mp4-gif",
     name: "MP4 to GIF",
-    description: "Convert an MP4 video to an animated GIF locally in your browser using ffmpeg (WebAssembly).",
+    description: "Convert an MP4 video to an animated GIF.",
     version: "0.0.1"
   },  {
     id: "wasm-tool",
@@ -14,7 +14,7 @@ export const TOOLS = [
   },  {
     id: "json-formatter",
     name: "JSON Formatter",
-    description: "Validate, pretty-print, and minify JSON locally using the browser's built-in parser.",
+    description: "Validate, pretty-print, and minify JSON.",
     version: "0.0.1"
   },  {
     id: "js-tool",
@@ -23,7 +23,7 @@ export const TOOLS = [
     version: "0.0.1"
   },  {
     id: "base64",
-    name: "Base64 Encode/Decode",
-    description: "Encode or decode Base64 locally.",
+    name: "Base64 Encode / Decode",
+    description: "Encode or decode Base64 text and images.",
     version: "0.0.1"
   },];
