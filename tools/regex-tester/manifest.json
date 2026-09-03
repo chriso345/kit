@@ -1,0 +1,8 @@
+{
+	"id": "regex-tester",
+	"name": "Regex Tester",
+	"description": "Test and debug regular expressions with real-time highlighting.",
+	"version": "0.0.1",
+	"build": {}
+}
+
