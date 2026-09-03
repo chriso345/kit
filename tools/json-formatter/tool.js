@@ -1,39 +1,36 @@
 export async function mount(container) {
 	container.innerHTML = `
-    <div class="tool" style="display:flex; flex-direction:column; height:80vh;">
-      <div style="display:flex; align-items:center; gap:1rem; padding:0.75rem 1rem; border-bottom:1px solid; flex-wrap:wrap;">
-        <label>Indent:
-          <select id="indent-select">
-            <option value="2">2 spaces</option>
-            <option value="4">4 spaces</option>
-            <option value="tab">Tab</option>
-          </select>
-        </label>
-        <button id="format-btn">Format</button>
-        <button id="minify-btn">Minify</button>
-        <button id="copy-btn" disabled>Copy</button>
-        <span id="status" style="margin-left:auto; font-size:0.9rem;"></span>
+    <div class="toolbar">
+      <div class="select-wrap">
+        <select id="indent-select" class="select">
+          <option value="2">Indent: 2 spaces</option>
+          <option value="4">Indent: 4 spaces</option>
+          <option value="tab">Indent: Tab</option>
+        </select>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
       </div>
+      <button id="format-btn" type="button" class="btn btn-secondary btn-sm">Format</button>
+      <button id="minify-btn" type="button" class="btn btn-secondary btn-sm">Minify</button>
 
-      <div style="position:relative; flex:1; overflow:auto;">
-        <pre id="json-highlight" aria-hidden="true" style="
-          margin:0; padding:1rem; box-sizing:border-box;
-          font-family:monospace; font-size:0.95rem; line-height:1.4;
-          white-space:pre-wrap; word-wrap:break-word;
-          position:absolute; inset:0; pointer-events:none;
-        "></pre>
+      <div class="toolbar__right">
+        <span class="status-line"><span class="status-dot" id="status-dot"></span><span id="status">Ready</span></span>
+        <button id="copy-btn" type="button" class="btn btn-secondary btn-sm" disabled>Copy Output</button>
+      </div>
+    </div>
+
+    <div class="code-editor">
+      <div class="code-editor__gutter" id="gutter">1</div>
+      <div class="code-editor__body">
+        <div class="code-editor__content">
+          <pre id="json-highlight" class="code-editor__highlight"></pre>
+        </div>
+
         <textarea
           id="json-box"
-          placeholder='{"hello": "world"}'
+          class="code-editor__input"
           spellcheck="false"
-          style="
-            margin:0; padding:1rem; box-sizing:border-box;
-            font-family:monospace; font-size:0.95rem; line-height:1.4;
-            white-space:pre-wrap; word-wrap:break-word;
-            position:absolute; inset:0; width:100%; height:100%;
-            border:none; outline:none; resize:none;
-            background:transparent; color:transparent; 
-          "
         ></textarea>
       </div>
     </div>
@@ -41,11 +38,21 @@ export async function mount(container) {
 
 	const box = container.querySelector("#json-box");
 	const highlightLayer = container.querySelector("#json-highlight");
+	const gutter = container.querySelector("#gutter");
 	const indentSelect = container.querySelector("#indent-select");
 	const formatBtn = container.querySelector("#format-btn");
 	const minifyBtn = container.querySelector("#minify-btn");
 	const copyBtn = container.querySelector("#copy-btn");
 	const status = container.querySelector("#status");
+	const statusDot = container.querySelector("#status-dot");
+
+	function setStatus(text, variant) {
+		status.textContent = text;
+		statusDot.className = "status-dot";
+		status.className = "";
+		if (variant) statusDot.classList.add(`status-dot--${variant}`);
+		if (variant === "error") status.classList.add("status-text--error");
+	}
 
 	function currentIndent() {
 		const v = indentSelect.value;
@@ -71,15 +78,15 @@ export async function mount(container) {
 		return escaped.replace(
 			/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(\.\d+)?([eE][+-]?\d+)?)/g,
 			(match) => {
-				let color = "#f0b429"; // number
+				let cls = "tok-number";
 				if (/^"/.test(match)) {
-					color = /:$/.test(match) ? "#42a5f5" : "#26a69a"; // key / string
+					cls = /:$/.test(match) ? "tok-key" : "tok-string";
 				} else if (/true|false/.test(match)) {
-					color = "#8e7cff"; // boolean
+					cls = "tok-boolean";
 				} else if (/null/.test(match)) {
-					color = "#ff5252"; // null
+					cls = "tok-null";
 				}
-				return `<span style="color:${color}">${match}</span>`;
+				return `<span class="${cls}">${match}</span>`;
 			},
 		);
 	}
@@ -88,15 +95,28 @@ export async function mount(container) {
 		highlightLayer.innerHTML = `${highlight(box.value)}\n`;
 	}
 
+	function renderGutter() {
+		const lineCount = Math.max(1, box.value.split("\n").length);
+		let lines = "";
+		for (let i = 1; i <= lineCount; i++) lines += `${i}\n`;
+		gutter.textContent = lines;
+	}
+
 	function syncScroll() {
-		highlightLayer.scrollTop = box.scrollTop;
-		highlightLayer.scrollLeft = box.scrollLeft;
+		highlightLayer.style.transform = `translate(${-box.scrollLeft}px, ${-box.scrollTop}px)`;
+
+		gutter.scrollTop = box.scrollTop;
+	}
+
+	function update() {
+		renderHighlight();
+		renderGutter();
 	}
 
 	function run(mode) {
 		const text = box.value;
 		if (!text.trim()) {
-			status.textContent = "Nothing to format.";
+			setStatus("Nothing to format.", "idle");
 			return;
 		}
 		try {
@@ -106,24 +126,24 @@ export async function mount(container) {
 					? JSON.stringify(parsed)
 					: JSON.stringify(parsed, null, currentIndent());
 			copyBtn.disabled = false;
-			status.textContent = "Valid JSON.";
+			setStatus(`Valid JSON (${new Blob([box.value]).size}B)`, "success");
 		} catch (err) {
 			copyBtn.disabled = true;
-			status.textContent = `Invalid JSON: ${locateError(text, err)}`;
+			setStatus(`Invalid JSON: ${locateError(text, err)}`, "error");
 		}
-		renderHighlight();
+		update();
 	}
 
-	box.addEventListener("input", renderHighlight);
+	box.addEventListener("input", update);
 	box.addEventListener("scroll", syncScroll);
 	formatBtn.addEventListener("click", () => run("format"));
 	minifyBtn.addEventListener("click", () => run("minify"));
 	copyBtn.addEventListener("click", async () => {
 		await navigator.clipboard.writeText(box.value);
-		status.textContent = "Copied to clipboard.";
+		setStatus("Copied to clipboard.", "success");
 	});
 
-	renderHighlight();
+	update();
 }
 
 export async function unmount() {}

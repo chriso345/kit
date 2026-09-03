@@ -1,11 +1,16 @@
 import { TOOLS } from "./tools/registry.js";
 
+const HIDDEN_FROM_GRID = new Set(["js-tool", "wasm-tool"]);
+
 const THEME_KEY = "kit-theme";
 const themeToggle = document.getElementById("theme-toggle");
 
 function applyTheme(theme) {
 	document.documentElement.dataset.theme = theme;
-	themeToggle.textContent = theme === "dark" ? "light" : "dark";
+	themeToggle.setAttribute(
+		"aria-label",
+		theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
+	);
 }
 
 function currentTheme() {
@@ -22,32 +27,73 @@ themeToggle.addEventListener("click", () => {
 
 const app = document.getElementById("app");
 const search = document.getElementById("tool-search");
+const headerCrumb = document.getElementById("header-crumb");
+const sourceLink = document.getElementById("source-link");
 
 let activeTool = null;
 
+function setCrumb(text) {
+	if (text) {
+		headerCrumb.textContent = text;
+		headerCrumb.hidden = false;
+	} else {
+		headerCrumb.hidden = true;
+	}
+}
+
+function setSourceLink(toolId) {
+	var baseUrl = "https://github.com/chriso345/kit/";
+
+	if (toolId) {
+		baseUrl += `tree/master/tools/${toolId}`;
+	}
+
+	sourceLink.href = baseUrl;
+}
+
+function escapeHtml(s) {
+	return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function renderHome(filter = "") {
+	setCrumb(null);
+	setSourceLink(null);
+
 	const q = filter.trim().toLowerCase();
 	const visible = TOOLS.filter(
 		(t) =>
-			t.name.toLowerCase().includes(q) ||
-			t.description.toLowerCase().includes(q),
+			!HIDDEN_FROM_GRID.has(t.id) &&
+			(t.name.toLowerCase().includes(q) ||
+				t.description.toLowerCase().includes(q)),
 	);
 
+	const cards = visible
+		.map(
+			(t) => `
+        <li>
+          <a class="tool-card" href="#/${t.id}">
+            <div class="tool-card__top">
+              <h3 class="tool-card__name">${escapeHtml(t.name)}</h3>
+              <span class="badge">v${escapeHtml(t.version)}</span>
+            </div>
+            <p class="tool-card__desc">${escapeHtml(t.description)}</p>
+            <span class="tool-card__link">
+              Open tool
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </span>
+          </a>
+        </li>
+      `,
+		)
+		.join("");
+
 	app.innerHTML = `
-    <ul class="tool-list">
-      ${visible
-				.map(
-					(t) => `
-          <li class="tool-item">
-            <a href="#/${t.id}">
-              <h3>${t.name}</h3>
-              <p>${t.description}</p>
-              <p>${t.version}</p>
-            </a>
-          </li>
-        `,
-				)
-				.join("")}
+    <h1 class="page-title">kit /</h1>
+    <ul class="tool-grid">
+      ${cards || '<li class="empty-state">No tools match your search.</li>'}
     </ul>
   `;
 }
@@ -56,16 +102,29 @@ async function renderTool(toolId) {
 	const tool = TOOLS.find((t) => t.id === toolId);
 
 	if (!tool) {
-		app.innerHTML = `<p>Tool not found: ${toolId}</p>`;
+		setCrumb(null);
+		app.innerHTML = `<p class="tool-error">Tool not found: ${escapeHtml(toolId)}</p>`;
 		return;
 	}
 
+	setCrumb(tool.name);
+	setSourceLink(toolId);
+
 	app.innerHTML = `
     <div class="tool-view-header">
-      <h2>${tool.name}</h2>
-      <a href="#/" class="back-button">Back</a>
-    </div >
-    <div class="tool-panel" id="tool-mount">Loading...</div>
+      <a href="#/" class="back-link">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to home
+      </a>
+      <h1 class="page-title">${escapeHtml(tool.name)}</h1>
+      <p class="page-subtitle">${escapeHtml(tool.description)}</p>
+    </div>
+    <div class="tool-panel" id="tool-mount">
+      <p class="tool-loading">Loading...</p>
+    </div>
   `;
 
 	const mountPoint = document.getElementById("tool-mount");
@@ -77,7 +136,7 @@ async function renderTool(toolId) {
 		await mod.mount(mountPoint);
 	} catch (err) {
 		console.error("Error mounting tool:", err);
-		mountPoint.innerHTML = `<p>Error loading tool: ${err.message}</p>`;
+		mountPoint.innerHTML = `<p class="tool-error">Error loading tool: ${escapeHtml(err.message)}</p>`;
 	}
 }
 
@@ -108,6 +167,15 @@ async function route() {
 
 search.addEventListener("input", () => {
 	if (!parseRoute()) renderHome(search.value);
+});
+
+window.addEventListener("keydown", (e) => {
+	const isShortcut = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
+	if (isShortcut) {
+		e.preventDefault();
+		search.focus();
+		search.select();
+	}
 });
 
 window.addEventListener("hashchange", route);

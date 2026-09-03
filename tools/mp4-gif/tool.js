@@ -1,21 +1,48 @@
 export async function mount(container) {
 	container.innerHTML = `
-    <div class="tool">
-      <p>Convert an MP4 to a GIF entirely in your browser via ffmpeg WebAssembly. Nothing is uploaded.</p>
-      <input type="file" id="mp4-input" accept="video/mp4" />
-      <div class="controls">
-        <label>FPS: <input type="number" id="fps" value="10" min="1" max="30" /></label>
-        <label>Width: <input type="number" id="width" value="320" min="16" max="1280" /></label>
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload an MP4 file">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 18a4.5 4.5 0 0 1-1.5-8.75A5.5 5.5 0 0 1 16.4 8.02 4 4 0 0 1 17 16"></path>
+        <polyline points="9 15 12 12 15 15"></polyline>
+        <line x1="12" y1="12" x2="12" y2="21"></line>
+      </svg>
+      <p class="dropzone__title" id="dropzone-title">Drag &amp; drop MP4 file here, or click to browse</p>
+      <p class="dropzone__hint">WASM file translation - Max 50MB suggested</p>
+      <input type="file" id="mp4-input" accept="video/mp4" class="visually-hidden" />
+    </div>
+
+    <div class="field-row">
+      <div class="field-group field-group--inline">
+        <label class="field-label" for="fps">Target FPS</label>
+        <input type="number" id="fps" class="input" value="10" min="1" max="30" />
       </div>
-      <button id="convert-btn" disabled>Convert to GIF</button>
-      <p id="status"></p>
-      <div id="result"></div>
+      <div class="field-group field-group--inline">
+        <label class="field-label" for="width">Width (Pixels)</label>
+        <input type="number" id="width" class="input" value="320" min="16" max="1280" />
+      </div>
+
+      <div class="field-row__right">
+        <span class="status-line"><span class="status-dot status-dot--idle" id="status-dot"></span><span id="status">Idle / Ready for file</span></span>
+        <button id="convert-btn" type="button" class="btn btn-primary" disabled>Convert to GIF</button>
+      </div>
+    </div>
+
+    <div class="preview-box" id="result">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        <circle cx="9" cy="10" r="1.5"></circle>
+        <path d="M21 16l-5-5-4 4-2-2-5 5"></path>
+      </svg>
+      <p>Output preview will appear here once converted.</p>
     </div>
   `;
 
+	const dropzone = container.querySelector("#dropzone");
+	const dropzoneTitle = container.querySelector("#dropzone-title");
 	const input = container.querySelector("#mp4-input");
 	const convertBtn = container.querySelector("#convert-btn");
 	const status = container.querySelector("#status");
+	const statusDot = container.querySelector("#status-dot");
 	const result = container.querySelector("#result");
 	const fpsInput = container.querySelector("#fps");
 	const widthInput = container.querySelector("#width");
@@ -24,10 +51,68 @@ export async function mount(container) {
 	let file = null;
 	let lastUrl = null;
 
-	input.addEventListener("change", () => {
-		file = input.files?.[0] ?? null;
+	function setStatus(text, variant) {
+		status.textContent = text;
+		statusDot.className = "status-dot";
+		status.className = "";
+		if (variant) statusDot.classList.add(`status-dot--${variant}`);
+		if (variant === "error") status.classList.add("status-text--error");
+	}
+
+	function resetPreview() {
+		result.innerHTML = `
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        <circle cx="9" cy="10" r="1.5"></circle>
+        <path d="M21 16l-5-5-4 4-2-2-5 5"></path>
+      </svg>
+      <p>Output preview will appear here once converted.</p>
+    `;
+	}
+
+	function setFile(f) {
+		file = f ?? null;
 		convertBtn.disabled = !file;
-		result.innerHTML = "";
+		resetPreview();
+		dropzoneTitle.textContent = file
+			? `${file.name} - click or drop to replace`
+			: "Drag & drop MP4 file here, or click to browse";
+		setStatus(file ? "Ready to convert" : "Idle", file ? "success" : "idle");
+	}
+
+	dropzone.addEventListener("click", () => input.click());
+	dropzone.addEventListener("keydown", (e) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			input.click();
+		}
+	});
+
+	["dragenter", "dragover"].forEach((evt) => {
+		dropzone.addEventListener(evt, (e) => {
+			e.preventDefault();
+			dropzone.classList.add("is-dragover");
+		});
+	});
+
+	["dragleave", "dragend", "drop"].forEach((evt) => {
+		dropzone.addEventListener(evt, (e) => {
+			e.preventDefault();
+			dropzone.classList.remove("is-dragover");
+		});
+	});
+
+	dropzone.addEventListener("drop", (e) => {
+		const dropped = e.dataTransfer?.files?.[0];
+		if (dropped && dropped.type === "video/mp4") {
+			setFile(dropped);
+		} else if (dropped) {
+			setStatus("Please drop an MP4 file.", "error");
+		}
+	});
+
+	input.addEventListener("change", () => {
+		setFile(input.files?.[0] ?? null);
 	});
 
 	async function fileToUint8Array(f) {
@@ -37,7 +122,7 @@ export async function mount(container) {
 	async function loadFFmpeg() {
 		if (ffmpeg) return ffmpeg;
 
-		status.textContent = "Loading ffmpeg (local)...";
+		setStatus("Loading ffmpeg (local)...", "busy");
 
 		const { FFmpeg } = await import(
 			new URL("./vendor/ffmpeg/index.js", import.meta.url)
@@ -46,10 +131,10 @@ export async function mount(container) {
 
 		ffmpeg = new FFmpeg();
 		ffmpeg.on("log", ({ message }) => {
-			status.textContent = message;
+			setStatus(message, "busy");
 		});
 		ffmpeg.on("progress", ({ progress }) => {
-			status.textContent = `Converting... ${(progress * 100).toFixed(0)}%`;
+			setStatus(`Converting... ${(progress * 100).toFixed(0)}%`, "busy");
 		});
 
 		await ffmpeg.load({
@@ -63,7 +148,7 @@ export async function mount(container) {
 	convertBtn.addEventListener("click", async () => {
 		if (!file) return;
 		convertBtn.disabled = true;
-		result.innerHTML = "";
+		resetPreview();
 
 		try {
 			const ff = await loadFFmpeg();
@@ -72,10 +157,10 @@ export async function mount(container) {
 			const width = Number(widthInput.value) || 320;
 			const vf = `fps=${fps},scale=${width}:-1:flags=lanczos`;
 
-			status.textContent = "Writing input file...";
+			setStatus("Writing input file...", "busy");
 			await ff.writeFile("input.mp4", await fileToUint8Array(file));
 
-			status.textContent = "Generating palette...";
+			setStatus("Generating palette...", "busy");
 			await ff.exec([
 				"-i",
 				"input.mp4",
@@ -84,7 +169,7 @@ export async function mount(container) {
 				"palette.png",
 			]);
 
-			status.textContent = "Encoding GIF...";
+			setStatus("Encoding GIF...", "busy");
 			await ff.exec([
 				"-i",
 				"input.mp4",
@@ -102,20 +187,22 @@ export async function mount(container) {
 
 			result.innerHTML = `
         <img src="${lastUrl}" alt="Converted GIF" />
-        <p><a href="${lastUrl}" download="output.gif">Download GIF</a></p>
+        <a href="${lastUrl}" download="output.gif">Download GIF</a>
       `;
-			status.textContent = "Done.";
+			setStatus("Done", "success");
 
 			await ff.deleteFile("input.mp4");
 			await ff.deleteFile("palette.png");
 			await ff.deleteFile("output.gif");
 		} catch (err) {
 			console.error("Conversion failed:", err);
-			status.textContent = `Error: ${err.message}`;
+			setStatus(`Error: ${err.message}`, "error");
 		} finally {
 			convertBtn.disabled = !file;
 		}
 	});
+
+	setFile(null);
 }
 
 export async function unmount() {}

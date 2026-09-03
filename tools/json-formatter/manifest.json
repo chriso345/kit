@@ -1,7 +1,7 @@
 {
 	"id": "json-formatter",
 	"name": "JSON Formatter",
-	"description": "Validate, pretty-print, and minify JSON locally using the browser's built-in parser.",
+	"description": "Validate, pretty-print, and minify JSON.",
 	"version": "0.0.1",
 	"build": {}
 }
