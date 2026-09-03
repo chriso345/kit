@@ -2,7 +2,7 @@
 	"id": "mp4-gif",
 	"name": "MP4 to GIF",
 	"description": "Convert an MP4 video to an animated GIF.",
-	"version": "0.0.1",
+	"version": "1",
 	"build": {
 		"artifact": "vendor/core/ffmpeg-core.wasm"
 	}

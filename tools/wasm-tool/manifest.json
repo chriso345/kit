@@ -2,7 +2,7 @@
 	"id": "wasm-tool",
 	"name": "WASM Tool Example",
 	"description": "A simple WebAssembly tool example.",
-	"version": "0.0.1",
+	"version": "1",
 	"build": {
 		"artifact": "wasm-tool.wasm"
 	}
