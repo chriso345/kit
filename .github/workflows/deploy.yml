@@ -40,7 +40,7 @@ jobs:
       - name: Stage site
         run: |
           mkdir -p _site
-          cp index.html app.js style.css _site/
+          cp index.html app.js style.css kit-icon-dark.svg kit-icon-light.svg _site/
           rsync -a \
             --exclude='.zig-cache/' \
             --exclude='zig-out/' \
