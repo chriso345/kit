@@ -18,10 +18,6 @@
 	--text-muted: #71717a;
 	--text-faint: #a1a1aa;
 
-	--accent: #0d9488;
-	--accent-strong: #0f766e;
-	--accent-soft: #ccfbf1;
-
 	--danger: #dc2626;
 	--warning: #d97706;
 	--info: #2563eb;
@@ -52,10 +48,6 @@
 	--text: #e4e4e7;
 	--text-muted: #a1a1aa;
 	--text-faint: #71717a;
-
-	--accent: #2dd4bf;
-	--accent-strong: #14b8a6;
-	--accent-soft: rgba(45, 212, 191, 0.12);
 
 	--danger: #f87171;
 	--warning: #f59e0b;
@@ -834,7 +826,7 @@ textarea {
 
 .dropzone:hover,
 .dropzone.is-dragover {
-	border-color: var(--accent);
+	border-color: var(--text);
 	background: var(--surface-hover);
 }
 
@@ -905,7 +897,7 @@ textarea {
 }
 
 .preview-box a {
-	color: var(--accent);
+	color: var(--text);
 	font-weight: 700;
 }
 
@@ -969,7 +961,7 @@ textarea {
 }
 
 .tok-match {
-	background: var(--accent-soft);
+	background: var(--text-soft);
 	border-radius: 2px;
 	padding: 0 1px;
 }
@@ -1045,4 +1037,155 @@ textarea {
 	.field-group--inline {
 		width: auto;
 	}
+}
+
+/* shapefile */
+
+.shapefile-layout {
+	display: grid;
+	grid-template-columns: minmax(220px, 340px) 1fr;
+	gap: 1.25rem;
+	margin-bottom: 1rem;
+}
+
+.shapefile-canvas-wrap,
+.shapefile-table-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.shapefile-canvas {
+	position: relative;
+	background: var(--surface-muted);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	aspect-ratio: 4 / 3;
+	overflow: hidden;
+}
+
+.shapefile-canvas-inner {
+	width: 100%;
+	height: 100%;
+	cursor: grab;
+	touch-action: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.shapefile-canvas-inner.is-panning {
+	cursor: grabbing;
+}
+
+.shapefile-zoom-controls {
+	position: absolute;
+	right: 0.5rem;
+	bottom: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.zoom-btn {
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	color: var(--text);
+	font-size: 0.95rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.zoom-btn .icon {
+	width: 14px;
+	height: 14px;
+}
+
+.zoom-btn:hover:not(:disabled) {
+	background: var(--surface-hover);
+}
+
+.zoom-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.shapefile-svg {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.shape-polygon {
+	fill: var(--text-soft);
+	stroke: var(--text);
+	stroke-width: 1.5;
+}
+
+.shape-line {
+	fill: none;
+	stroke: var(--text);
+	stroke-width: 1.75;
+}
+
+.shape-point {
+	fill: var(--text);
+}
+
+.shapefile-table-scroll {
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	overflow: auto;
+	max-height: 320px;
+}
+
+.shapefile-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.82rem;
+}
+
+.shapefile-table th,
+.shapefile-table td {
+	padding: 0.5rem 0.75rem;
+	text-align: left;
+	border-bottom: 1px solid var(--border);
+	white-space: nowrap;
+}
+
+.shapefile-table thead th {
+	position: sticky;
+	top: 0;
+	background: var(--surface);
+	color: var(--text-muted);
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-weight: 700;
+}
+
+.shapefile-table tbody tr:hover {
+	background: var(--surface-muted);
+}
+
+.shapefile-meta {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	border-top: 1px solid var(--border);
+	padding-top: 0.85rem;
+}
+
+.shapefile-layout {
+	grid-template-columns: 1fr;
 }
